@@ -527,12 +527,10 @@ static int __devinit ps2audio_probe(struct platform_device *dev)
 	audsrv_data_t *data;
 	struct snd_pcm *pcm;
 
-	/* There are more implementations of libsd, choose one in kernelloader
 	if (load_module_firmware("ps2/freesd.irx", 0) < 0) {
 		printk("ps2audio: loading ps2/freesd.irx failed\n");
 		return -ENODEV;
 	}
-	*/
 
 	if (load_module_firmware("ps2/audsrv.irx", 0) < 0) {
 		printk("ps2audio: loading ps2/audsrv.irx failed\n");
