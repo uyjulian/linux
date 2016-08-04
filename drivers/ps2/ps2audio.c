@@ -333,7 +333,7 @@ static struct snd_pcm_ops ps2audio_pcm_ops = {
 	.page      = ps2audio_pcm_page,
 };
 
-static int __devinit ps2audio_bind(audsrv_data_t *data)
+static int ps2audio_bind(audsrv_data_t *data)
 {
 	int loop;
 	struct completion compl;
@@ -520,7 +520,7 @@ static void play_audio_wq(struct work_struct *work)
 
 static struct snd_device_ops ops = { NULL };
 
-static int __devinit ps2audio_probe(struct platform_device *dev)
+static int ps2audio_probe(struct platform_device *dev)
 {
 	struct snd_card *card;
 	int ret;
@@ -639,7 +639,7 @@ static int __devinit ps2audio_probe(struct platform_device *dev)
 	return 0;
 }
 
-static int __devexit ps2audio_driver_remove(struct platform_device *pdev)
+static int ps2audio_remove(struct platform_device *pdev)
 {
 	audsrv_data_t *data = platform_get_drvdata(pdev);
 
@@ -670,26 +670,13 @@ static int __devexit ps2audio_driver_remove(struct platform_device *pdev)
 
 static struct platform_driver ps2audio_driver = {
 	.probe	= ps2audio_probe,
-	.remove	= __devexit_p(ps2audio_driver_remove),
+	.remove	= ps2audio_remove,
 	.driver	= {
 		.name	= "ps2audio",
 		.owner	= THIS_MODULE,
 	},
 };
-
-static int __init ps2audio_init(void)
-{
-	return platform_driver_register(&ps2audio_driver);
-}
-
-static void __exit ps2audio_exit(void)
-{
-	platform_driver_unregister(&ps2audio_driver);
-	return;
-}
-
-module_init(ps2audio_init);
-module_exit(ps2audio_exit);
+module_platform_driver(ps2audio_driver);
 
 MODULE_AUTHOR("Juergen Urban");
 MODULE_DESCRIPTION("PlayStation 2 Audio Driver using audsrv.irx");
