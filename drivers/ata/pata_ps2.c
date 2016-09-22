@@ -68,7 +68,6 @@ struct ps2_port {
 	struct ata_port *ap;
 	struct completion rpc_completion;
 
-	struct workqueue_struct *wq;
 	struct delayed_work delayed_finish;
 
 	u32 iop_data_buffer_addr;
@@ -337,7 +336,7 @@ static void pata_ps2_cmd_handle(void *data, void *harg)
 			status = ioread8(ap->ioaddr.altstatus_addr);
 			if (status & (ATA_BUSY | ATA_DRQ)) {
 				dev_info(pp->dev, "status = %d\n", status);
-				queue_delayed_work(pp->wq, &pp->delayed_finish, 1);
+				ata_sff_queue_delayed_work(&pp->delayed_finish, 1);
 			} else {
 				pata_ps2_dma_finished(ap, qc);
 			}
@@ -370,7 +369,7 @@ static void pata_ps2_delayed_finish(struct work_struct *work)
 	if (status & (ATA_BUSY | ATA_DRQ)) {
 		//dev_info(pp->dev, "status = %d\n", status);
 		/* Still busy, try again. */
-		queue_delayed_work(pp->wq, &pp->delayed_finish, 1);
+		ata_sff_queue_delayed_work(&pp->delayed_finish, 1);
 		goto out;
 	}
 	qc = ata_qc_from_tag(ap, ap->link.active_tag);
@@ -421,11 +420,11 @@ static void pata_ps2_setup_rpc(struct ps2_port *pp)
 	dev_info(pp->dev, "rpc setup: iop cmd buffer @ %pad, size = %d\n", (void *)pp->iop_data_buffer_addr, pp->iop_data_buffer_size);
 }
 
-static int __devinit __pata_ps2_probe(struct device *dev,
-				    struct resource *io_res,
-				    struct resource *ctl_res,
-				    struct resource *irq_res,
-				    unsigned int ioport_shift)
+static int __pata_ps2_probe(struct device *dev,
+			    struct resource *io_res,
+			    struct resource *ctl_res,
+			    struct resource *irq_res,
+			    unsigned int ioport_shift)
 {
 	struct ps2_port *pp;
 	struct ata_host *host;
@@ -471,9 +470,6 @@ static int __devinit __pata_ps2_probe(struct device *dev,
 	pp->dev = dev;
 	pp->ap = ap;
 	init_completion(&pp->rpc_completion);
-	pp->wq = create_singlethread_workqueue(DRV_NAME);
-	if (!pp->wq)
-		return -1;
 	INIT_DELAYED_WORK(&pp->delayed_finish, pata_ps2_delayed_finish);
 
 	pata_ps2_setup_rpc(pp);
@@ -536,7 +532,7 @@ int __pata_ps2_remove(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(__pata_ps2_remove);
 
-static int __devinit pata_ps2_probe(struct platform_device *pdev)
+static int pata_ps2_probe(struct platform_device *pdev)
 {
 	struct resource *io_res;
 	struct resource *ctl_res;
@@ -585,31 +581,21 @@ static int __devinit pata_ps2_probe(struct platform_device *pdev)
 	return __pata_ps2_probe(&pdev->dev, io_res, ctl_res, irq_res, 1);
 }
 
-static int __devexit pata_ps2_remove(struct platform_device *pdev)
+static int pata_ps2_remove(struct platform_device *pdev)
 {
 	return __pata_ps2_remove(&pdev->dev);
 }
 
 static struct platform_driver pata_ps2_driver = {
 	.probe		= pata_ps2_probe,
-	.remove		= __devexit_p(pata_ps2_remove),
+	.remove		= pata_ps2_remove,
 	.driver = {
 		.name		= DRV_NAME,
 		.owner		= THIS_MODULE,
 	},
 };
 
-static int __init pata_ps2_init(void)
-{
-	return platform_driver_register(&pata_ps2_driver);
-}
-
-static void __exit pata_ps2_exit(void)
-{
-	platform_driver_unregister(&pata_ps2_driver);
-}
-module_init(pata_ps2_init);
-module_exit(pata_ps2_exit);
+module_platform_driver(pata_ps2_driver);
 
 MODULE_AUTHOR("Rick Gaiser");
 MODULE_DESCRIPTION("Playstation 2 PATA driver");
