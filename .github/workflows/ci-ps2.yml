@@ -32,12 +32,32 @@
           }
         },
         {
+          "name" : "Set up Homebrew environment for Github Actions",
+          "run" : "echo \"/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin\" >> $GITHUB_PATH"
+        },
+        {
+          "name" : "Set up chrpath",
+          "run" : "brew install chrpath"
+        },
+        {
           "name" : "Download toolchain",
           "run" : "curl -LOC - https://github.com/uyjulian/buildroot/releases/download/v2017.2.0-ps2uyj1/mipsel-buildroot-linux-uclibc_sdk-buildroot.tar.gz"
         },
         {
           "name" : "Extract toolchain",
           "run" : "tar -xf mipsel-buildroot-linux-uclibc_sdk-buildroot.tar.gz"
+        },
+        {
+          "name" : "Fix toolchain cc1plus rpath",
+          "run" : "chrpath -r '$ORIGIN/../../../../lib' mipsel-buildroot-linux-uclibc_sdk-buildroot/usr/libexec/gcc/mipsel-buildroot-linux-uclibc/6.3.0/cc1plus"
+        },
+        {
+          "name" : "Fix toolchain cc1 rpath",
+          "run" : "chrpath -r '$ORIGIN/../../../../lib' mipsel-buildroot-linux-uclibc_sdk-buildroot/usr/libexec/gcc/mipsel-buildroot-linux-uclibc/6.3.0/cc1"
+        },
+        {
+          "name" : "Fix toolchain lto1 rpath",
+          "run" : "chrpath -r '$ORIGIN/../../../../lib' mipsel-buildroot-linux-uclibc_sdk-buildroot/usr/libexec/gcc/mipsel-buildroot-linux-uclibc/6.3.0/lto1"
         },
         {
           "name" : "Add toolchain to PATH",
