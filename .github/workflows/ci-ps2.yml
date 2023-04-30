@@ -96,10 +96,6 @@
           "run" : "gzip -c -9 .build_ps2/vmlinux.strip > .build_ps2/vmlinux-v3.8.gz"
         },
         {
-          "name" : "Create SDK tarball",
-          "run" : "tar -czf output/images/mipsel-buildroot-linux-uclibc_sdk-buildroot.tar.gz --owner=0 --group=0 --numeric-owner --transform='s#^./#mipsel-buildroot-linux-uclibc_sdk-buildroot/#' -C output/host/ ."
-        },
-        {
           "name" : "Make modules",
           "run" : "make -j$(getconf _NPROCESSORS_ONLN) ARCH=mips CROSS_COMPILE=mipsel-linux- modules"
         },
